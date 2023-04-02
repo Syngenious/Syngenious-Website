@@ -1,7 +1,19 @@
 import type { PageServerLoad } from './$types';
 
 import { request } from 'undici';
-import { CLIENT_ID, CLIENT_SECRET } from '$env/static/private';
+import { DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET } from '$env/static/private';
+
+let db;
+
+async function connectToMongo() {
+  const client = new MongoClient(MONGODB_URI);
+  await client.connect();
+  db = client.db(); // Replace with the name of your database, if needed
+}
+
+connectToMongo().catch((err) => {
+  console.error('Failed to connect to MongoDB:', err);
+});
 
 async function fetchDiscordProfile(accessToken: string) {
     const { body, statusCode } = await request('https://discord.com/api/users/@me', {
@@ -24,8 +36,8 @@ export const load: PageServerLoad = async ({ url }) => {
             const tokenResponseData = await request('https://discord.com/api/oauth2/token', {
                 method: 'POST',
                 body: new URLSearchParams({
-                    client_id: CLIENT_ID,
-                    client_secret: CLIENT_SECRET,
+                    client_id: DISCORD_CLIENT_ID,
+                    client_secret: DISCORD_CLIENT_SECRET,
                     code,
                     grant_type: 'authorization_code',
                     redirect_uri: 'http://localhost:5173/login',
